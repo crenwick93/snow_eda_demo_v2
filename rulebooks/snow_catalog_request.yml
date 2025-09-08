@@ -8,10 +8,9 @@
         table: sc_task
         interval: 5
         query:
-          # add a small overlap + ordering to avoid misses
           sysparm_query: "sys_updated_onONLast 10 minutes^ORDERBYsys_updated_on"
           sysparm_fields: "sys_id,number,short_description,sys_created_on,sys_updated_on,state"
-          sysparm_limit: 50
+          sysparm_limit: "50" 
   rules:
     - name: Output ServiceNow Information
       condition: event.meta is defined
