@@ -1,10 +1,11 @@
 ---
 - name: Respond to ServiceNow catalog request items
   hosts: all
+  execution_strategy: parallel
   sources:
     - name: Watch for any updated table
       servicenow.itsm.records:
-        table: sc_request
+        table: sc_task
         interval: 5
   rules:
     - name: Output ServiceNow Information
