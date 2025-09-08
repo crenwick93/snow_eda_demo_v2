@@ -3,16 +3,16 @@
   hosts: all
   execution_strategy: parallel
   sources:
-    - name: Listen for alerts from ServiceNow EDA Notification Service
-      ansible.eda.webhook:
-        host: 0.0.0.0
-        port: 5000
+    - name: Watch for any updated table
+      servicenow.itsm.records:
+        table: sc_request
+        interval: 5
   rules:
     - name: Output ServiceNow Information
-      condition: event.meta is defined
+      condition: event.sys_id is defined
       action:
         debug:
-          var: event.payload.short_description
+          var: event
 
     # - name: Enrich new REQ received from Service Catalog
     #   condition: event.payload.sys_class_name == "sc_request" and event.payload.sys_mod_count == "0"
