@@ -5,9 +5,12 @@
   sources:
     - name: Watch for any updated table
       servicenow.itsm.records:
-        table: sc_request
-        interval: 5
-        updated_since: "2025-09-08 09:00:00"
+      table: sc_request
+      interval: 5
+      # Start with a safe, past cut-off so existing tests are eligible
+      updated_since: "2025-09-09 08:35:00"   # UTC
+      # Make the API return only recent rows, newest first (first page contains new stuff)
+      sysparm_query: "sys_updated_on>=javascript:gs.minutesAgoStart(15)^ORDERBYDESCsys_updated_on"
 
   rules:
     - name: New record created and debug
