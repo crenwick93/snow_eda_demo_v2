@@ -6,7 +6,7 @@
     - name: Watch for any updated table
       servicenow.itsm.records:
         table: sc_request
-        interval: 2
+        interval: 10
 
   rules:
     - name: Output ServiceNow Information
