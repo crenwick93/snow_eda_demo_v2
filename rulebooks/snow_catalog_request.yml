@@ -5,14 +5,15 @@
   sources:
     - name: Watch for any updated table
       servicenow.itsm.records:
-      table: sc_request
-      interval: 2
+        table: sc_request
+        interval: 5
 
   rules:
-    - name: New record created and debug
-      condition: event.sys_id is defined
+    - name: Output ServiceNow Information
+      condition: event.meta is defined
       action:
         debug:
+          var: event
 
     # - name: Enrich new REQ received from Service Catalog
     #   condition: event.payload.sys_class_name == "sc_request" and event.payload.sys_mod_count == "0"
