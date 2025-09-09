@@ -1,6 +1,6 @@
 ##### SUMMARY
 <!--- Explain the problem briefly below -->
-`servicenow.itsm.records` (EDA event source) advances its internal `updated_since` watermark to a **future time** (`now + interval`) at the start of each poll. This creates a blind spot on **every** cycle: records created/updated after the fetch in cycle *k* and before the future watermark used in cycle *k+1* are **skipped forever** (silent data loss).
+servicenow.itsm.records (EDA event source) sets its updated_since watermark to a future time (now + interval) at the start of each poll. This creates a blind spot on every cycle: any record created/updated after the current poll’s fetch but before that future timestamp is excluded from the next poll and is never emitted (silent data loss).
 
 ##### ISSUE TYPE
 - Bug Report
@@ -11,8 +11,17 @@
 
 ##### ANSIBLE VERSION
 <!--- Paste verbatim output from "ansible --version" between quotes -->
-```paste below
-<do be completed>
+```
+bash-4.4$ ansible --version
+ansible [core 2.16.14]
+  config file = /etc/ansible/ansible.cfg
+  configured module search path = ['/home/runner/.ansible/plugins/modules', '/usr/share/ansible/plugins/modules']
+  ansible python module location = /usr/lib/python3.11/site-packages/ansible
+  ansible collection location = /home/runner/.ansible/collections:/usr/share/ansible/collections
+  executable location = /usr/bin/ansible
+  python version = 3.11.13 (main, Aug 21 2025, 11:45:17) [GCC 8.5.0 20210514 (Red Hat 8.5.0-28)] (/usr/bin/python3.11)
+  jinja version = 3.1.6
+  libyaml = True
 ```
 
 ##### COLLECTION VERSION
@@ -25,9 +34,10 @@ servicenow.itsm 2.12.0
 ```
 
 ##### CONFIGURATION
-<!--- Paste verbatim output from "ansible-config dump --only-changed" between quotes -->
-```paste below
-<do be completed>
+From inside of the Decision Environment Container:
+```
+bash-4.4$ ansible-config dump --only-changed
+CONFIG_FILE() = /etc/ansible/ansible.cfg
 ```
 
 ##### OS / ENVIRONMENT
@@ -80,7 +90,7 @@ curl -s -u "$SN_USER:$SN_PASS"   "$SN_URL/api/now/table/sc_request?sysparm_displ
 
 ##### EXPECTED RESULTS
 <!--- Describe what you expected to happen when running the steps above -->
-Records created after poll *k* and before poll *k+1* should be emitted on poll *k+1*. No records should be silently skipped.
+Records created after the previous poll’s fetch (i.e., between two consecutive “Polling … since …” timestamps) should be emitted on the next poll. No records should be silently skipped.
 
 ##### ACTUAL RESULTS
 <!--- Describe what actually happened. If possible run with extra verbosity (-vvvv) -->
@@ -96,3 +106,15 @@ Records created between polls are **never** emitted because the next cycle’s `
 # ServiceNow proof: record sits between those two polls (example)
 REQ0010016    2025-09-09 09:43:19    2025-09-09 09:43:19    ed0ffaf653f36210a33138f0a0490edb
 ```
+### What determines whether an event is emitted?
+
+- **Current poll (previous poll in the logs)**
+  1. The poll starts and immediately fetches records.
+  2. The plugin then (incorrectly) sets the next `since` to **now + interval** and goes to sleep.
+
+- **What happens to new records:**
+  - **Created before the fetch:** ✅ Emitted in the current poll.
+  - **Created after the fetch but before the future “since” time:** ❌ Dropped forever (next poll’s `since` is already in the future).
+  - **Created at or after that future “since” time:** ✅ Emitted in the next poll.
+
+> Practical takeaway: with the current bug, anything you create **during the sleep** but **before** that future “since” will be missed.
