@@ -53,9 +53,9 @@ We reproduced this both in AAP and by running `ansible-rulebook` on a developmen
 2025-09-10 09:50:42,460 - <run_path> - INFO - Sleeping for 10 seconds
 2025-09-10 09:50:52,470 - <run_path> - INFO - Polling for new records in sc_request since 2025-09-10 09:50:51.474950
 2025-09-10 09:50:53,433 - <run_path> - INFO - Sleeping for 10 seconds
-2025-09-10 09:51:03,443 - <run_path> - INFO - Polling for new records in sc_request since 2025-09-10 09:51:02.470425
+2025-09-10 09:51:03,443 - <run_path> - INFO - Polling for new records in sc_request since 2025-09-10 09:51:02.470425 <<< LOWER
 2025-09-10 09:51:04,848 - <run_path> - INFO - Sleeping for 10 seconds
-2025-09-10 09:51:14,858 - <run_path> - INFO - Polling for new records in sc_request since 2025-09-10 09:51:13.443535
+2025-09-10 09:51:14,858 - <run_path> - INFO - Polling for new records in sc_request since 2025-09-10 09:51:13.443535 <<< UPPER
 2025-09-10 09:51:15,759 - <run_path> - INFO - Sleeping for 10 seconds
 2025-09-10 09:51:25,763 - <run_path> - INFO - Polling for new records in sc_request since 2025-09-10 09:51:24.858002
 2025-09-10 09:51:26,714 - <run_path> - INFO - Sleeping for 10 seconds
@@ -65,7 +65,7 @@ We reproduced this both in AAP and by running `ansible-rulebook` on a developmen
 REQ0010032	2025-09-10 09:51:06	4d6a8013533fa210a33138f0a0490e96
 ```
 
-As you can see in the above evidence snippet, I have run rulebook, created an event inbetween polls and it does not show in the logs. I have use curl to verify that the REQ has definitely been created and is between the polling gaps.
+As you can see in the above evidence snippet, I have run rulebook, created an event inbetween polls and it does not show in the logs. I have use curl to verify that the REQ has definitely been created and is between the polling gaps. I have added UPPER and LOWER labels to show where the event should have landed.
 
 ## Impact
 Potential silent data loss: rows created during the sleep window may never produce an event.
