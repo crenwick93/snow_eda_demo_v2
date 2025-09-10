@@ -56,6 +56,4 @@ Potential silent data loss: rows created during the sleep window may never produ
 - Lowering the interval (e.g., to 1s) narrows the window and reduces misses, but does not fully address the underlying behavior.
 - Starting with an `updated_since` set slightly in the past can backfill, at the cost of possible duplicates.
 
-## ADDITIONAL OBSERVATIONS
-- The behavior is reproducible **outside** AAP by running `ansible-rulebook` directly on a development environment; results are identical.
 
