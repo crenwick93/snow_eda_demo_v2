@@ -1,0 +1,26 @@
+---
+- name: Provision Special Project VM
+  hosts: localhost
+  connection: local
+  tasks:
+    - name: Extract individual VM attributes
+      ansible.builtin.set_fact:
+        cpu: >-
+          {{ vm_specific_variables | selectattr('name', 'equalto', 'cpu') | map(attribute='value') | first }}
+        ram: >-
+          {{ vm_specific_variables | selectattr('name', 'equalto', 'ram') | map(attribute='value') | first }}
+        storage: >-
+          {{ vm_specific_variables | selectattr('name', 'equalto', 'storage') | map(attribute='value') | first }}
+
+    - name: Provision Special Project VM
+      ansible.builtin.debug:
+        msg: |
+          Provision Special Project VM
+          ----------------------------
+          Request Number: {{ req_number }}
+          Requested For: {{ requested_for_user }}
+          ----------------------------
+          VM Request Details:
+          CPU: {{ cpu }}
+          RAM: {{ ram }}
+          Storage: {{ storage }}

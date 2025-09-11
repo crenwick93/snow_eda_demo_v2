@@ -1,0 +1,13 @@
+---
+- name: Add user to group example
+  hosts: localhost
+  connection: local
+  tasks:
+    - name: Add user to group
+      ansible.builtin.debug:
+        msg: adding user to group
+
+    - name: Publish outcome for ServiceNow to read
+      set_stats:
+        data:
+          status_msg: "Test information"

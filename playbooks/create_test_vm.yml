@@ -1,0 +1,61 @@
+---
+- name: Provision Test VM
+  hosts: localhost
+  connection: local
+  vars:
+    instance_type_map:
+        "2_4": t3.medium      # 2 vCPU, 4 GiB RAM
+        "2_8": t3.large       # 2 vCPU, 8 GiB RAM
+  tasks:
+    - name: Extract individual VM attributes
+      ansible.builtin.set_fact:
+        cpu: >-
+          {{ vm_specific_variables | selectattr('name', 'equalto', 'cpu') | map(attribute='value') | first }}
+        ram: >-
+          {{ vm_specific_variables | selectattr('name', 'equalto', 'ram') | map(attribute='value') | first }}
+        storage: >-
+          {{ vm_specific_variables | selectattr('name', 'equalto', 'storage') | map(attribute='value') | first }}
+
+    - name: Determine instance type based on CPU and RAM
+      set_fact:
+        instance_type: "{{ instance_type_map[cpu ~ '_' ~ ram] }}"
+
+    - name: Provision Test VM
+      ansible.builtin.debug:
+        msg: |
+          Provision Test VM
+          ----------------------------
+          Request Number: {{ req_number }}
+          Requested For: {{ requested_for_user }}
+          ----------------------------
+          VM Request Details:
+          CPU: {{ cpu }}
+          RAM: {{ ram }}
+          Storage: {{ storage }}
+          aws_instance_type: {{ instance_type }}
+
+    # AWS specific tasks
+    - name: Launch EC2 instance in test aws environment
+      amazon.aws.ec2_instance:
+        name: "TEST INSTANCE ---- DEMO 1"
+        key_name: "chris-aws"
+        instance_type: "{{ instance_type }}"
+        image_id: "ami-05238ab1443fdf48f"
+        region: "eu-west-2"
+        wait: yes
+        count: 1
+        vpc_subnet_id: "subnet-0ba9958ce9570c5f3"
+        security_group: "default"
+        volumes:
+          - device_name: /dev/xvda
+            ebs:
+              volume_size: "{{ storage.split()[0] | int }}"
+              delete_on_termination: true
+              volume_type: gp3
+        tags:
+          Environment: Testing
+      register: ec2_result
+
+    - name: Show instance details
+      debug:
+        var: ec2_result
